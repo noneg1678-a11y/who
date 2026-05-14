@@ -23,6 +23,13 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      
+      - name: Install zip (for splitting)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq zip
       
       - uses: actions/setup-python@v5
         with:
@@ -36,34 +43,31 @@ jobs:
         env:
           VIDEO_QUALITY: ${{ github.event.inputs.quality }}
       
-      - name: Get folder name
-        id: get_folder
+      - name: Push files to repository
+        env:
+          BRANCH: ${{ github.ref_name }}
         run: |
-          FOLDER=$(cat last_folder.txt)
-          echo "folder_name=$FOLDER" >> $GITHUB_OUTPUT
-          echo "Found folder: $FOLDER"
-      
-      - name: Parallel add files to git
-        run: |
-          FOLDER="${{ steps.get_folder.outputs.folder_name }}"
-          cd $FOLDER
-          # پیدا کردن همه فایل‌ها و اضافه کردن موازی
-          ls video.zip* video.z* 2>/dev/null | xargs -P 10 -I {} git add {}
-          cd ..
-          git add last_folder.txt
-      
-      - name: Parallel commit and push
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # گرفتن لیست فایل‌ها
-          FOLDER="${{ steps.get_folder.outputs.folder_name }}"
-          FILES=$(ls $FOLDER/video.zip* $FOLDER/video.z* 2>/dev/null | tr '\n' ' ')
-          
-          # کامیت کردن همه با هم
-          git add $FILES last_folder.txt
-          git commit -m "Add video parts [skip ci]" || echo "No changes to commit"
-          
-          # پوش با --force برای سرعت بیشتر
-          git push --force-with-lease
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git config http.postBuffer 524288000
+
+          if [ -z "$(ls -A)" ]; then
+            echo "No files to upload."
+            exit 0
+          fi
+
+          # اضافه کردن پوشه‌های رندوم و فایل‌های زیپ شده
+          git add */video.zip* */video.z* last_folder.txt
+          git commit -m "Add video parts [skip ci]" || echo "Nothing to commit"
+
+          RETRIES=5
+          for i in $(seq 1 $RETRIES); do
+            echo "Push attempt $i..."
+            git pull --rebase --autostash origin "${{ github.ref_name }}" || true
+            if git push origin "${{ github.ref_name }}"; then
+              echo "Push succeeded."
+              break
+            else
+              [ $i -lt $RETRIES ] && sleep 3 || echo "Push failed after $RETRIES attempts"
+            fi
+          done
