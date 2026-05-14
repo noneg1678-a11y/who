@@ -13,86 +13,6 @@ def create_random_folder():
     print(f"Created folder: {folder_path}")
     return folder_path
 
-def split_file(file_path, chunk_size_mb=90):
-    """
-    تقسیم فایل به چند قسمت
-    خروجی: file.zip.001, file.zip.002, ...
-    """
-    chunk_size = chunk_size_mb * 1024 * 1024  # تبدیل به بایت
-    file_size = os.path.getsize(file_path)
-    
-    if file_size <= chunk_size:
-        print(f"File size ({file_size/(1024*1024):.2f} MB) is less than {chunk_size_mb} MB, no splitting needed")
-        return [file_path]
-    
-    print(f"Splitting {file_size/(1024*1024):.2f} MB into {chunk_size_mb} MB chunks...")
-    
-    # نام فایل‌های خروجی
-    base_name = file_path + ".part"
-    
-    parts = []
-    with open(file_path, 'rb') as f:
-        part_num = 1
-        while True:
-            chunk = f.read(chunk_size)
-            if not chunk:
-                break
-            
-            part_name = f"{base_name}{part_num:03d}"
-            parts.append(part_name)
-            
-            with open(part_name, 'wb') as part_file:
-                part_file.write(chunk)
-            
-            print(f"  Created: {part_name} ({len(chunk)/(1024*1024):.2f} MB)")
-            part_num += 1
-    
-    # حذف فایل اصلی
-    os.remove(file_path)
-    print(f"Removed original file: {file_path}")
-    
-    return parts
-
-def create_split_zip(folder_path, video_file):
-    """
-    ایجاد فایل زیپ و سپس اسپلیت کردن آن
-    """
-    zip_path = os.path.join(folder_path, "video.zip")
-    
-    # ساخت فایل زیپ
-    print(f"Creating zip file: {zip_path}")
-    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        zipf.write(video_file, os.path.basename(video_file))
-    
-    # حذف فایل اصلی ویدیو
-    os.remove(video_file)
-    print(f"Removed original video file")
-    
-    # چک کردن سایز زیپ
-    zip_size = os.path.getsize(zip_path)
-    print(f"Zip size: {zip_size/(1024*1024):.2f} MB")
-    
-    if zip_size > 90 * 1024 * 1024:
-        print("Zip is larger than 90MB, splitting...")
-        # اسپلیت کردن فایل زیپ
-        parts = split_file(zip_path, 90)
-        
-        # تغییر نام فایل‌ها به فرمت دلخواه
-        new_parts = []
-        for i, part in enumerate(parts):
-            if i == 0:
-                new_name = os.path.join(folder_path, "video.zip")
-            else:
-                new_name = os.path.join(folder_path, f"video.z{i:02d}")
-            
-            os.rename(part, new_name)
-            new_parts.append(new_name)
-            print(f"  Renamed to: {os.path.basename(new_name)}")
-        
-        return new_parts
-    else:
-        return [zip_path]
-
 def main():
     if len(sys.argv) < 2:
         print("Error: No video URL provided")
@@ -136,28 +56,47 @@ def main():
         
         video_file = os.path.join(output_folder, downloaded_files[0])
         print(f"\nDownloaded: {video_file}")
-        file_size = os.path.getsize(video_file) / (1024 * 1024)
-        print(f"File size: {file_size:.2f} MB")
         
-        # ایجاد زیپ و اسپلیت کردن
-        print("\n" + "="*50)
-        print("Creating zip and splitting if needed...")
-        print("="*50)
+        # گرفتن سایز فایل به مگابایت (مثل کد dl2)
+        FILE_SIZE = os.path.getsize(video_file)
+        FILE_SIZE_MB = FILE_SIZE // (1024 * 1024)
+        print(f"File size: {FILE_SIZE_MB} MB")
         
-        final_files = create_split_zip(output_folder, video_file)
+        # ساخت نام رندوم 5 کاراکتری (مثل کد dl2)
+        RAND5 = ''.join(random.choices(string.ascii_lowercase, k=5))
+        ZIP_NAME = f"{downloaded_files[0]}_{RAND5}.zip"
+        
+        # انتقال فایل به پوشه مقصد و زیپ کردن در همانجا (مثل کد dl2)
+        # فایل قبلاً در output_folder هست، پس فقط زیپ می‌کنیم
+        
+        # رفتن به پوشه مقصد (مثل کد dl2 که cd می‌کرد)
+        original_dir = os.getcwd()
+        os.chdir(output_folder)
+        
+        # زیپ کردن با متد مثل کد dl2
+        if FILE_SIZE_MB > 95:
+            print("File larger than 95MB, splitting into parts...")
+            os.system(f'zip -s 95m "{ZIP_NAME}" "{downloaded_files[0]}"')
+            os.remove(downloaded_files[0])
+            print("File split into parts")
+        else:
+            print("File smaller than 95MB, zipping without split...")
+            os.system(f'zip "{ZIP_NAME}" "{downloaded_files[0]}"')
+            os.remove(downloaded_files[0])
+        
+        os.chdir(original_dir)
+        
+        print(f"\nSaved to: {output_folder}/{ZIP_NAME}")
+        print("Files in folder:")
+        os.system(f'ls -la "{output_folder}"')
+        
+        # ذخیره نام پوشه برای آپلود (مثل کد dl2 که مستقیم direct/ رو add می‌کرد)
+        with open('last_folder.txt', 'w') as f:
+            f.write(output_folder)
         
         print("\n" + "="*50)
         print("DOWNLOAD COMPLETE!")
         print("="*50)
-        print(f"Output folder: {output_folder}/")
-        print("Files created:")
-        for f in final_files:
-            size = os.path.getsize(f) / (1024 * 1024)
-            print(f"  - {os.path.basename(f)} ({size:.2f} MB)")
-        
-        # ذخیره نام پوشه در فایل برای استفاده بعدی
-        with open('last_folder.txt', 'w') as f:
-            f.write(output_folder)
         
     except Exception as e:
         print(f"ERROR: {e}")
