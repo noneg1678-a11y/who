@@ -3,7 +3,7 @@ import os
 import random
 import string
 import zipfile
-from pathlib import Path
+import subprocess
 
 def create_random_folder():
     """ایجاد پوشه با نام رندوم 5 رقمی"""
@@ -54,20 +54,19 @@ def main():
             print("ERROR: No video file found after download")
             sys.exit(1)
         
-        video_file = os.path.join(output_folder, downloaded_files[0])
-        print(f"\nDownloaded: {video_file}")
+        video_file = downloaded_files[0]
+        video_path = os.path.join(output_folder, video_file)
         
         # گرفتن سایز فایل به مگابایت (مثل کد dl2)
-        FILE_SIZE = os.path.getsize(video_file)
+        FILE_SIZE = os.path.getsize(video_path)
         FILE_SIZE_MB = FILE_SIZE // (1024 * 1024)
         print(f"File size: {FILE_SIZE_MB} MB")
         
         # ساخت نام رندوم 5 کاراکتری (مثل کد dl2)
         RAND5 = ''.join(random.choices(string.ascii_lowercase, k=5))
-        ZIP_NAME = f"{downloaded_files[0]}_{RAND5}.zip"
+        ZIP_NAME = f"{video_file}_{RAND5}.zip"
         
-        # انتقال فایل به پوشه مقصد و زیپ کردن در همانجا (مثل کد dl2)
-        # فایل قبلاً در output_folder هست، پس فقط زیپ می‌کنیم
+        print(f"ZIP name: {ZIP_NAME}")
         
         # رفتن به پوشه مقصد (مثل کد dl2 که cd می‌کرد)
         original_dir = os.getcwd()
@@ -76,21 +75,24 @@ def main():
         # زیپ کردن با متد مثل کد dl2
         if FILE_SIZE_MB > 95:
             print("File larger than 95MB, splitting into parts...")
-            os.system(f'zip -s 95m "{ZIP_NAME}" "{downloaded_files[0]}"')
-            os.remove(downloaded_files[0])
+            cmd = f'zip -s 95m "{ZIP_NAME}" "{video_file}"'
+            os.system(cmd)
+            os.remove(video_file)
             print("File split into parts")
         else:
             print("File smaller than 95MB, zipping without split...")
-            os.system(f'zip "{ZIP_NAME}" "{downloaded_files[0]}"')
-            os.remove(downloaded_files[0])
+            cmd = f'zip "{ZIP_NAME}" "{video_file}"'
+            os.system(cmd)
+            os.remove(video_file)
         
+        # برگشت به پوشه اصلی
         os.chdir(original_dir)
         
         print(f"\nSaved to: {output_folder}/{ZIP_NAME}")
         print("Files in folder:")
         os.system(f'ls -la "{output_folder}"')
         
-        # ذخیره نام پوشه برای آپلود (مثل کد dl2 که مستقیم direct/ رو add می‌کرد)
+        # ذخیره نام پوشه برای آپلود (مثل کد dl2)
         with open('last_folder.txt', 'w') as f:
             f.write(output_folder)
         
