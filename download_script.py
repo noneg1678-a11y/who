@@ -1,9 +1,8 @@
 import sys
 import os
-import warnings
 
-# غیرفعال کردن HTTP/2 برای رفع خطای اول
-os.environ["HQPORNER_USE_HTTP2"] = "false"
+# غیرفعال کردن HTTP/2 از طریق متغیر محیطی قبل از import کتابخانه
+os.environ["HTTPX_HTTP2"] = "0"
 
 def main():
     if len(sys.argv) < 2:
@@ -18,38 +17,38 @@ def main():
     try:
         from hqporner_api.api import Client
         
-        # ایجاد کلاینت با غیرفعال کردن HTTP/2
-        client = Client(use_http2=False)
-        print("Connected to API (HTTP/2 disabled)")
+        # بدون هیچ پارامتری کلاینت را بساز
+        client = Client()
+        print("Connected to API")
         
         print("Fetching video info...")
         video = client.get_video(video_url)
         
         print(f"Title: {video.title}")
         
-        # بررسی وجود attributeها با hasattr
-        if hasattr(video, 'duration'):
+        # بررسی duration اگر وجود داشت
+        if hasattr(video, 'duration') and video.duration:
             print(f"Duration: {video.duration} seconds")
         
-        print("Downloading video (this may take a while)...")
+        print("Downloading video...")
         video.download(output_path="downloaded_video")
         
         print("SUCCESS: Video downloaded!")
         
         # نمایش فایل دانلود شده
-        for file in os.listdir("downloaded_video"):
-            if file.endswith((".mp4", ".ts", ".m3u8")):
+        files = os.listdir("downloaded_video")
+        if files:
+            for file in files:
                 file_path = os.path.join("downloaded_video", file)
-                size = os.path.getsize(file_path) / (1024 * 1024)
-                print(f"Saved file: {file} ({size:.2f} MB)")
-        
-        if not any(f.endswith(".mp4") for f in os.listdir("downloaded_video")):
-            print("Warning: No MP4 file found. Listing all files in download directory:")
-            for file in os.listdir("downloaded_video"):
-                print(f"  - {file}")
+                if os.path.isfile(file_path):
+                    size = os.path.getsize(file_path) / (1024 * 1024)
+                    print(f"Saved: {file} ({size:.2f} MB)")
+        else:
+            print("Warning: No files found in download directory")
                 
     except Exception as e:
         print(f"ERROR: {e}")
+        # نمایش جزئیات بیشتر خطا
         import traceback
         traceback.print_exc()
         sys.exit(1)
