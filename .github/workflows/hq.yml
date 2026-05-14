@@ -4,20 +4,27 @@ on:
   workflow_dispatch:
     inputs:
       video_url:
-        description: 'آدرس ویدیو مورد نظر را وارد کنید'
+        description: 'آدرس ویدیو را وارد کنید'
         required: true
         type: string
+      quality:
+        description: 'کیفیت (360, 720, 1080)'
+        required: false
+        default: '1080'
+        type: choice
+        options:
+          - '1080'
+          - '720'
+          - '360'
 
 jobs:
   download:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       
@@ -26,10 +33,11 @@ jobs:
       
       - name: Run download script
         run: python download_script.py "${{ github.event.inputs.video_url }}"
+        env:
+          VIDEO_QUALITY: ${{ github.event.inputs.quality }}
       
-      - name: Upload video artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: downloaded-video
-          path: downloaded_video/*.mp4
+          path: downloaded_video/
           retention-days: 7
