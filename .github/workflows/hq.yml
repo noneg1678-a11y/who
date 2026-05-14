@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       video_url:
-        description: 'URL of the video to download'
+        description: 'آدرس ویدیو مورد نظر را وارد کنید'
         required: true
         type: string
 
@@ -13,25 +13,23 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-    
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-    
-    - name: Run download script
-      run: |
-        python download_script.py "${{ github.event.inputs.video_url }}"
-    
-    - name: Upload video as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: downloaded-video
-        path: downloaded_video/*.mp4
-        retention-days: 7
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install hqporner-api
+        run: pip install hqporner-api
+      
+      - name: Run download script
+        run: python download_script.py "${{ github.event.inputs.video_url }}"
+      
+      - name: Upload video artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: downloaded-video
+          path: downloaded_video/*.mp4
+          retention-days: 7
