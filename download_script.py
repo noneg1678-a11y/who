@@ -14,7 +14,7 @@ def main():
     os.makedirs("downloaded_video", exist_ok=True)
     
     try:
-        from hqporner_api.api import Client, Quality
+        from hqporner_api.api import Client
         
         print("Connecting to API...")
         client = Client()
@@ -23,13 +23,13 @@ def main():
         video = client.get_video(video_url)
         
         print(f"Title: {video.title}")
-        print(f"Duration: {video.duration} seconds")
+        
+        # نمایش کیفیت‌های موجود
+        print("Available qualities:", video.available_qualities)
         
         print("Downloading...")
-        video.download(
-            quality=Quality.BEST,
-            output_path="downloaded_video"
-        )
+        # بدون指定 کیفیت، پیش‌فرض بهترین کیفیت را می‌گیرد
+        video.download(output_path="downloaded_video")
         
         print("SUCCESS: Video downloaded!")
         
