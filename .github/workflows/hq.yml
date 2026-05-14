@@ -36,30 +36,10 @@ jobs:
         env:
           VIDEO_QUALITY: ${{ github.event.inputs.quality }}
       
-      - name: Get folder name
-        id: get_folder
-        run: |
-          if [ -f last_folder.txt ]; then
-            FOLDER=$(cat last_folder.txt)
-            echo "folder_name=$FOLDER" >> $GITHUB_OUTPUT
-            echo "Found folder: $FOLDER"
-          else
-            echo "folder_name=unknown" >> $GITHUB_OUTPUT
-          fi
-      
-      - name: Upload split files
-        uses: actions/upload-artifact@v4
-        with:
-          name: video-parts-${{ github.run_id }}
-          path: |
-            */video.zip*
-            */video.z*
-          retention-days: 7
-      
-      - name: Commit and push split files to repository
+      - name: Push files to repository
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add */video.zip* */video.z* last_folder.txt
-          git commit -m "Add downloaded video parts [skip ci]" || echo "No changes to commit"
+          git commit -m "Add video parts [skip ci]" || echo "No changes to commit"
           git push
