@@ -1,9 +1,6 @@
 import sys
 import os
 
-# غیرفعال کردن HTTP/2 از طریق متغیر محیطی قبل از import کتابخانه
-os.environ["HTTPX_HTTP2"] = "0"
-
 def main():
     if len(sys.argv) < 2:
         print("Error: No video URL provided")
@@ -17,7 +14,6 @@ def main():
     try:
         from hqporner_api.api import Client
         
-        # بدون هیچ پارامتری کلاینت را بساز
         client = Client()
         print("Connected to API")
         
@@ -25,30 +21,29 @@ def main():
         video = client.get_video(video_url)
         
         print(f"Title: {video.title}")
+        print(f"Duration: {video.length}")
+        print(f"Available qualities: {video.video_qualities}")
+        print(f"Pornstars: {', '.join(video.pornstars) if video.pornstars else 'N/A'}")
+        print(f"Tags: {', '.join(video.tags[:5])}...")
         
-        # بررسی duration اگر وجود داشت
-        if hasattr(video, 'duration') and video.duration:
-            print(f"Duration: {video.duration} seconds")
+        print("\nStarting download...")
+        # استفاده از پارامترهای صحیح متد download
+        video.download(
+            quality='1080',  # یا '720' یا '360'
+            path='downloaded_video/'
+        )
         
-        print("Downloading video...")
-        video.download(output_path="downloaded_video")
-        
-        print("SUCCESS: Video downloaded!")
+        print("\nSUCCESS: Video downloaded!")
         
         # نمایش فایل دانلود شده
-        files = os.listdir("downloaded_video")
-        if files:
-            for file in files:
-                file_path = os.path.join("downloaded_video", file)
-                if os.path.isfile(file_path):
-                    size = os.path.getsize(file_path) / (1024 * 1024)
-                    print(f"Saved: {file} ({size:.2f} MB)")
-        else:
-            print("Warning: No files found in download directory")
+        for file in os.listdir("downloaded_video"):
+            file_path = os.path.join("downloaded_video", file)
+            if os.path.isfile(file_path):
+                size = os.path.getsize(file_path) / (1024 * 1024)
+                print(f"Saved: {file} ({size:.2f} MB)")
                 
     except Exception as e:
         print(f"ERROR: {e}")
-        # نمایش جزئیات بیشتر خطا
         import traceback
         traceback.print_exc()
         sys.exit(1)
