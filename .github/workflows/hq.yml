@@ -43,18 +43,6 @@ jobs:
         env:
           VIDEO_QUALITY: ${{ github.event.inputs.quality }}
       
-      - name: List all files for debugging
-        run: |
-          echo "=== Current directory ==="
-          pwd
-          ls -la
-          echo "=== All folders ==="
-          find . -type d | head -20
-          echo "=== All zip files ==="
-          find . -name "*.zip*" -o -name "*.z*" | head -20
-          echo "=== last_folder.txt content ==="
-          cat last_folder.txt 2>/dev/null || echo "last_folder.txt not found"
-      
       - name: Push files to repository
         env:
           BRANCH: ${{ github.ref_name }}
@@ -73,10 +61,6 @@ jobs:
               echo "Adding files from $FOLDER"
               git add "$FOLDER"/
             fi
-          else
-            echo "last_folder.txt not found, trying to add all zip files"
-            git add *.zip* *.z* 2>/dev/null || true
-            git add */*.zip* */*.z* 2>/dev/null || true
           fi
           
           git add last_folder.txt 2>/dev/null || true
