@@ -34,24 +34,35 @@ def download_video(video_url, quality, index):
         return False, index, str(e)
 
 def main():
-    # گرفتن لینک‌ها از environment variables
+    # گرفتن لینک‌ها از environment variables - فقط لینک‌های پر شده
     video_urls = []
     for i in range(1, 11):
         url = os.environ.get(f'VIDEO_URL_{i}')
-        if url and url.strip():
+        # فقط لینک‌هایی که خالی یا None نباشند اضافه کن
+        if url and url.strip() and url.strip() != '':
             video_urls.append((i, url.strip()))
     
+    # بررسی اینکه حداقل یک لینک وجود داشته باشد
     if not video_urls:
-        print("خطا: هیچ لینکی وارد نشده است!")
+        print("❌ خطا: هیچ لینکی وارد نشده است!")
+        print("لطفا حداقل یک آدرس ویدیو وارد کنید.")
         sys.exit(1)
     
     quality = os.environ.get('VIDEO_QUALITY', '1080')
-    print(f"کیفیت انتخابی: {quality}")
-    print(f"تعداد ویدیوهای برای دانلود: {len(video_urls)}")
-    print("=" * 50)
+    print(f"🎬 کیفیت انتخابی: {quality}")
+    print(f"📥 تعداد ویدیوهای برای دانلود: {len(video_urls)}")
+    print("=" * 60)
     
-    # دانلود همزمان با حداکثر ۳ تا ترد همزمان (برای جلوگیری از ban شدن)
+    # نمایش لیست ویدیوهایی که دانلود می‌شوند
+    for idx, url in video_urls:
+        print(f"  ویدیو {idx}: {url}")
+    
+    print("=" * 60)
+    
+    # دانلود همزمان با حداکثر ۳ تا ترد همزمان
     max_workers = min(3, len(video_urls))
+    print(f"⚡ حداکثر دانلود همزمان: {max_workers}")
+    
     results = []
     
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -65,28 +76,37 @@ def main():
             results.append((success, idx, message))
     
     # گزارش نهایی
-    print("\n" + "=" * 50)
-    print("گزارش نهایی دانلود:")
+    print("\n" + "=" * 60)
+    print("📊 گزارش نهایی دانلود:")
     successful = [r for r in results if r[0]]
     failed = [r for r in results if not r[0]]
     
     print(f"✅ موفق: {len(successful)} ویدیو")
     print(f"❌ ناموفق: {len(failed)} ویدیو")
     
+    if successful:
+        print("\nویدیوهای موفق:")
+        for _, idx, title in successful:
+            print(f"  🎥 ویدیو {idx}: {title}")
+    
     if failed:
         print("\nویدیوهای ناموفق:")
         for _, idx, error in failed:
-            print(f"  - ویدیو {idx}: {error}")
+            print(f"  ❌ ویدیو {idx}: {error}")
     
     # نمایش فایل‌های دانلود شده
-    print("\nفایل‌های ذخیره شده:")
-    for root, dirs, files in os.walk("downloaded_videos"):
-        for file in files:
-            file_path = os.path.join(root, file)
-            size = os.path.getsize(file_path) / (1024 * 1024)
-            print(f"  {file_path} ({size:.2f} MB)")
+    if os.path.exists("downloaded_videos"):
+        print("\n💾 فایل‌های ذخیره شده:")
+        total_size = 0
+        for root, dirs, files in os.walk("downloaded_videos"):
+            for file in files:
+                file_path = os.path.join(root, file)
+                size = os.path.getsize(file_path) / (1024 * 1024)
+                total_size += size
+                print(f"  📁 {file_path} ({size:.2f} MB)")
+        print(f"\n📊 مجموع حجم دانلود: {total_size:.2f} MB")
     
-    if failed:
+    if failed and not successful:
         sys.exit(1)
 
 if __name__ == "__main__":
