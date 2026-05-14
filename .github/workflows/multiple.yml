@@ -1,47 +1,47 @@
-name: Download multiple Videos from HQPorner
+name: Download Multiple Videos from HQPorner
 
 on:
   workflow_dispatch:
     inputs:
       video_url_1:
-        description: 'آدرس ویدیو 1 را وارد کنید'
-        required: true
+        description: 'آدرس ویدیو 1 (اختیاری)'
+        required: false
         type: string
       video_url_2:
-        description: 'آدرس ویدیو 2 را وارد کنید'
-        required: true
+        description: 'آدرس ویدیو 2 (اختیاری)'
+        required: false
         type: string
       video_url_3:
-        description: 'آدرس ویدیو 3 را وارد کنید'
-        required: true
+        description: 'آدرس ویدیو 3 (اختیاری)'
+        required: false
         type: string
       video_url_4:
-        description: 'آدرس ویدیو 4 را وارد کنید'
-        required: true
+        description: 'آدرس ویدیو 4 (اختیاری)'
+        required: false
         type: string
       video_url_5:
-        description: 'آدرس ویدیو 5 را وارد کنید'
-        required: true
+        description: 'آدرس ویدیو 5 (اختیاری)'
+        required: false
         type: string
       video_url_6:
-        description: 'آدرس ویدیو 6 را وارد کنید'
-        required: true
+        description: 'آدرس ویدیو 6 (اختیاری)'
+        required: false
         type: string
       video_url_7:
-        description: 'آدرس ویدیو 7 را وارد کنید'
-        required: true
+        description: 'آدرس ویدیو 7 (اختیاری)'
+        required: false
         type: string
       video_url_8:
-        description: 'آدرس ویدیو 8 را وارد کنید'
-        required: true
+        description: 'آدرس ویدیو 8 (اختیاری)'
+        required: false
         type: string
       video_url_9:
-        description: 'آدرس ویدیو 9 را وارد کنید'
-        required: true
+        description: 'آدرس ویدیو 9 (اختیاری)'
+        required: false
         type: string
       video_url_10:
-        description: 'آدرس ویدیو 10 را وارد کنید'
-        required: true
+        description: 'آدرس ویدیو 10 (اختیاری)'
+        required: false
         type: string
       quality:
         description: 'کیفیت (360, 720, 1080)'
