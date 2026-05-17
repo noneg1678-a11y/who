@@ -82,6 +82,19 @@ jobs:
           VIDEO_URL_10: ${{ github.event.inputs.video_url_10 }}
           VIDEO_QUALITY: ${{ github.event.inputs.quality }}
       
+      - name: Final sanitize (just in case)
+        run: |
+          find downloaded_videos/ -type f | while read file; do
+            dir=$(dirname "$file")
+            oldname=$(basename "$file")
+            newname=$(echo "$oldname" | sed 's/[?<>:"\\|*]/-/g' | sed 's/[,;]/-/g')
+            if [ "$oldname" != "$newname" ]; then
+              echo "Renaming: $oldname -> $newname"
+              mv "$dir/$oldname" "$dir/$newname"
+            fi
+          done
+        continue-on-error: true
+      
       - uses: actions/upload-artifact@v4
         with:
           name: downloaded-videos
