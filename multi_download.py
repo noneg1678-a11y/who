@@ -1,8 +1,39 @@
 import sys
 import os
+import re
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
+
+def sanitize_filename(filename):
+    """حذف کاراکترهای غیرمجاز از نام فایل"""
+    # کاراکترهای غیرمجاز در ویندوز و GitHub Actions
+    invalid_chars = r'[<>:"/\\|?*\r\n]'
+    # جایگزینی با خط تیره
+    sanitized = re.sub(invalid_chars, '-', filename)
+    # حذف نقطه و فاصله از انتها و ابتدا
+    sanitized = sanitized.strip('. ')
+    # حذف فاصله‌های اضافی
+    sanitized = re.sub(r'\s+', ' ', sanitized)
+    return sanitized
+
+def rename_video_files(download_path):
+    """تغییر نام همه فایل‌های ویدیو در مسیر داده شده"""
+    renamed_count = 0
+    for root, dirs, files in os.walk(download_path):
+        for file in files:
+            if file.endswith(('.mp4', '.avi', '.mkv', '.webm', '.mov')):
+                old_path = os.path.join(root, file)
+                new_name = sanitize_filename(file)
+                new_path = os.path.join(root, new_name)
+                if old_path != new_path:
+                    try:
+                        os.rename(old_path, new_path)
+                        print(f"  🔄 تغییر نام: {file} -> {new_name}")
+                        renamed_count += 1
+                    except Exception as e:
+                        print(f"  ⚠️ خطا در تغییر نام {file}: {e}")
+    return renamed_count
 
 def download_video(video_url, quality, index):
     """دانلود یک ویدیو با threading"""
@@ -25,6 +56,11 @@ def download_video(video_url, quality, index):
             quality=quality,
             path=download_path
         )
+        
+        # تغییر نام فایل‌ها بعد از دانلود (حذف کاراکترهای غیرمجاز)
+        renamed = rename_video_files(download_path)
+        if renamed > 0:
+            print(f"[ویدیو {index}] 🔄 {renamed} فایل تغییر نام یافت")
         
         print(f"[ویدیو {index}] ✅ دانلود کامل شد!")
         return True, index, video.title
